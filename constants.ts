@@ -3,6 +3,34 @@ import { StylePreset } from './types';
 
 export const STYLE_PRESETS: StylePreset[] = [
   {
+    id: 'pro-designer',
+    name: '专业设计师风',
+    icon: '👔',
+    description: '高端、平衡、极具设计感的专业工作室水准。',
+    promptSuffix: 'high-end professional design, studio lighting, premium textures, sophisticated typography, balanced composition, expert graphic design, sleek and corporate, minimalist yet premium'
+  },
+  {
+    id: 'tech-future',
+    name: '科技感未来风',
+    icon: '🚀',
+    description: '全息光效、电路纹理，触手可及的未来。',
+    promptSuffix: 'high-tech futuristic aesthetic, holographic elements, circuit board lines, glowing blue energy, sci-fi interface style, ultra-modern tech, deep space blue and silver, sharp digital edges'
+  },
+  {
+    id: 'fresh-healing',
+    name: '清新治愈风',
+    icon: '🍃',
+    description: '莫兰迪色系、柔和光影，温暖人心。',
+    promptSuffix: 'fresh and healing aesthetic, soft pastel color palette, airy atmosphere, gentle natural lighting, cozy and warm, minimalist organic shapes, serene and peaceful design, soft gradients'
+  },
+  {
+    id: 'memphis-flat',
+    name: '孟菲斯扁平风',
+    icon: '🧩',
+    description: '活泼几何形、波浪线，经典孟菲斯艺术。',
+    promptSuffix: 'Memphis design style, flat vector, playful geometric shapes, squiggly lines and dots, high contrast vibrant colors, pop art influence, modern flat aesthetic, abstract patterns'
+  },
+  {
     id: 'minimalist',
     name: '极简主义',
     icon: '🎨',
@@ -24,6 +52,34 @@ export const STYLE_PRESETS: StylePreset[] = [
     promptSuffix: 'Leonardo da Vinci manuscript style, old parchment paper background, sepia ink sketches, Renaissance technical drawing, anatomical and mechanical diagrams, charcoal strokes, aged paper texture, mirror writing aesthetic'
   },
   {
+    id: 'ukiyo-e',
+    name: '浮世绘',
+    icon: '🌊',
+    description: '日本传统木刻版画风格，韵味十足。',
+    promptSuffix: 'Japanese ukiyo-e woodblock print style, bold outlines, traditional flat colors, Kanagawa wave aesthetic, cultural heritage, vintage artistic look'
+  },
+  {
+    id: 'bauhaus',
+    name: '包豪斯',
+    icon: '📐',
+    description: '经典几何美学，红黄蓝三原色构图。',
+    promptSuffix: 'Bauhaus design style, primary colors red blue yellow, geometric shapes, circle triangle square, minimalist functionalism, early 20th century modernism aesthetic'
+  },
+  {
+    id: 'isometric-3d',
+    name: '等距视角',
+    icon: '🧱',
+    description: '现代 2.5D 矢量艺术，极具空间感。',
+    promptSuffix: '3D isometric vector art, 2.5D perspective, clean geometric shapes, modern app icon aesthetic, soft ambient occlusion shadows, professional tech illustration'
+  },
+  {
+    id: 'vaporwave',
+    name: '蒸汽波',
+    icon: '🏮',
+    description: '80年代复古未来主义，梦幻粉紫色调。',
+    promptSuffix: 'Vaporwave aesthetic, 80s retro futurism, glitched 3D statues, pink and teal palette, lo-fi nostalgic mood, synthwave elements'
+  },
+  {
     id: 'program-code',
     name: '程序代码',
     icon: '💻',
@@ -43,6 +99,27 @@ export const STYLE_PRESETS: StylePreset[] = [
     icon: '✏️',
     description: '精致的铅笔线条，真实手绘感。',
     promptSuffix: 'detailed pencil sketch, hand-drawn artistic lines, graphite strokes, charcoal texture, white paper background, minimalist fine art style'
+  },
+  {
+    id: 'claymorphism',
+    name: '粘土风格',
+    icon: '🧶',
+    description: '目前最流行的胖乎乎 3D 粘土质感。',
+    promptSuffix: 'claymorphism 3D style, soft clay texture, puffy and squishy look, pastel colors, high-end 3D render, playful and modern'
+  },
+  {
+    id: 'watercolor-art',
+    name: '水墨晕染',
+    icon: '🖌️',
+    description: '柔美水彩质感，优雅自然流转。',
+    promptSuffix: 'traditional ink wash and watercolor, flowing pigments, soft paper texture, artistic bleeding edges, elegant and calm, organic shapes'
+  },
+  {
+    id: 'low-poly-art',
+    name: '低多边形',
+    icon: '💎',
+    description: '独特的多边形网格，数字化艺术感。',
+    promptSuffix: 'low poly geometric art, faceted surfaces, triangular mesh, sharp edges, modern digital 3D look, abstract geometric composition'
   },
   {
     id: 'warhammer-world',
@@ -120,13 +197,6 @@ export const STYLE_PRESETS: StylePreset[] = [
     icon: '✂️',
     description: '层次分明的纸艺效果，立体纹理。',
     promptSuffix: 'layered paper cutout art, 3D paper shadows, tactile paper texture, clean layers, craft aesthetic'
-  },
-  {
-    id: 'memphis',
-    name: '孟菲斯',
-    icon: '🏁',
-    description: '几何图形与波浪线的撞色实验。',
-    promptSuffix: 'Memphis design style, playful geometric patterns, zigzags and dots, vibrant contrasting pop colors'
   },
   {
     id: 'fluid-organic',
