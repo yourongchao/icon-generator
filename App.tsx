@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import { generateIcon } from './services/geminiService';
 import { saveHistory, getAllHistory, deleteHistoryItem, clearAllHistory } from './services/historyService';
@@ -35,6 +35,19 @@ const App: React.FC = () => {
   
   const [history, setHistory] = useState<GeneratedImage[]>([]);
 
+  // 计算今日生成数量
+  const todayCount = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTime = today.getTime();
+
+    return history.filter(item => {
+      const itemDate = new Date(item.timestamp);
+      itemDate.setHours(0, 0, 0, 0);
+      return itemDate.getTime() === todayTime;
+    }).length;
+  }, [history]);
+
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('light', 'warm', 'dark');
@@ -62,7 +75,6 @@ const App: React.FC = () => {
     });
   };
 
-  // 统一错误处理函数
   const handleApiError = (err: any) => {
     console.error("API Error Object:", err);
     const message = err.message || "";
@@ -116,7 +128,6 @@ const App: React.FC = () => {
         setBatchProgress({ current: i, total });
         
         if (i > 1) {
-          // 增加一点随机延时，且稍微调大一点点范围到 0.5s-1.5s 以缓解 429
           const randomDelay = Math.floor(Math.random() * (1500 - 500 + 1)) + 500;
           await sleep(randomDelay);
         }
@@ -139,7 +150,6 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       handleApiError(err);
-      // 如果批量生成中报错，通常是配额问题，直接中断循环
       setBatchProgress(null);
     } finally {
       setIsLoading(false);
@@ -246,7 +256,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-500">
-      <Header theme={theme} toggleTheme={toggleTheme} />
+      <Header theme={theme} toggleTheme={toggleTheme} todayCount={todayCount} />
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -256,7 +266,7 @@ const App: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    <label className="text-sm font-black text-slate-900 dark:text-white tracking-wider">
                       图标内容
                     </label>
                   </div>
@@ -270,7 +280,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-black text-slate-900 dark:text-white mb-3 uppercase tracking-wider">
+                  <label className="block text-sm font-black text-slate-900 dark:text-white mb-3 tracking-wider">
                     画面比例
                   </label>
                   <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
@@ -291,7 +301,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-black text-slate-900 dark:text-white mb-3 uppercase tracking-wider">
+                  <label className="block text-sm font-black text-slate-900 dark:text-white mb-3 tracking-wider">
                     设计风格
                   </label>
                   <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
@@ -393,7 +403,7 @@ const App: React.FC = () => {
                     {isLoading && batchProgress && (
                       <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm">
                         <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
-                        <p className="text-xl font-black tracking-widest">灵感连发 ({batchProgress.current}/{batchProgress.total})</p>
+                        <p className="text-xl font-black tracking-widest">灵感连发 ({batchProgress.current}/${batchProgress.total})</p>
                         <p className="text-xs text-indigo-200 mt-2 opacity-80">正在优化下一组创作灵感...</p>
                       </div>
                     )}
@@ -446,7 +456,7 @@ const App: React.FC = () => {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">图片历史记录管理</h4>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-wider">图片历史记录管理</h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">本地已安全保存了 {history.length} 张创作图片</p>
                     </div>
                  </div>
@@ -514,7 +524,7 @@ const App: React.FC = () => {
                     ) : (
                       <button 
                         onClick={() => setIsBatchMode(true)}
-                        className="px-6 py-1.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all uppercase tracking-wider shadow-sm hover:shadow active:scale-95"
+                        className="px-6 py-1.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all tracking-wider shadow-sm hover:shadow active:scale-95"
                       >
                         批量管理
                       </button>
@@ -594,7 +604,7 @@ const App: React.FC = () => {
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowHelpModal(false)}></div>
           <div className="relative bg-white dark:bg-slate-800 w-full max-w-2xl rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[90vh] flex flex-col transition-colors">
              <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-               <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">如何查看本地 IndexedDB 存储？</h3>
+               <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">如何查看本地 IndexedDB 存储？</h3>
                <button onClick={() => setShowHelpModal(false)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400">
                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -604,15 +614,15 @@ const App: React.FC = () => {
              
              <div className="p-8 overflow-y-auto space-y-10 custom-scrollbar">
                <div className="space-y-6">
-                 <h4 className="text-lg font-black uppercase text-indigo-600 dark:text-indigo-400">Google Chrome 浏览器</h4>
-                 <p className="text-sm text-slate-600 dark:text-slate-300">1. 右键检查 -> 2. Application -> 3. IndexedDB -> 4. YouyeyeIconDB -> history</p>
-                 <h4 className="text-lg font-black uppercase text-orange-600 dark:text-orange-400">Firefox 浏览器</h4>
-                 <p className="text-sm text-slate-600 dark:text-slate-300">1. 右键检查 -> 2. 存储 (Storage) -> 3. IndexedDB -> 4. YouyeyeIconDB -> history</p>
+                 <h4 className="text-lg font-black text-indigo-600 dark:text-indigo-400">Chrome 浏览器</h4>
+                 <p className="text-sm text-slate-600 dark:text-slate-300">1. 页面右键检查 -> 2. Application -> 3. IndexedDB -> 4. YouyeyeIconDB -> history</p>
+                 <h4 className="text-lg font-black text-orange-600 dark:text-orange-400">Firefox 浏览器</h4>
+                 <p className="text-sm text-slate-600 dark:text-slate-300">1. 页面右键检查 -> 2. 存储 (Storage) -> 3. IndexedDB -> 4. YouyeyeIconDB -> history</p>
                </div>
              </div>
              
              <div className="p-8 bg-indigo-600 text-white flex items-center justify-between">
-                <p className="text-sm font-black uppercase">💡 存储在本地，清理数据后历史将消失</p>
+                <p className="text-sm font-black">💡 存储在本地，清理数据后历史将消失。其中YouyeyeIconDB是数据库名</p>
                 <button onClick={() => setShowHelpModal(false)} className="px-6 py-2 bg-white text-indigo-600 rounded-xl text-xs font-black hover:scale-105 transition-all">
                   明白啦
                 </button>

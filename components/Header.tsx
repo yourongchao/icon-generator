@@ -4,17 +4,10 @@ import React from 'react';
 interface HeaderProps {
   theme: 'light' | 'warm' | 'dark';
   toggleTheme: () => void;
+  todayCount: number;
 }
 
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
-  const scrollToHistory = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const historySection = document.getElementById('history-section');
-    if (historySection) {
-      historySection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, todayCount }) => {
   const getThemeIcon = () => {
     if (theme === 'light') {
       return (
@@ -53,13 +46,11 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
         </div>
         
         <nav className="flex items-center gap-3 sm:gap-6">
-          <a 
-            href="#history-section" 
-            onClick={scrollToHistory}
-            className="hidden sm:block text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          <div 
+            className="text-[10px] sm:text-sm font-semibold text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/50 px-4 py-2 rounded-full border border-slate-100 dark:border-slate-700 select-none"
           >
-            历史记录
-          </a>
+            今日已生成 <span className="text-indigo-600 dark:text-indigo-400 font-black">{todayCount}</span> 张
+          </div>
           
           <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
 
@@ -71,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             {getThemeIcon()}
           </button>
 
-          <button className="bg-slate-900 dark:bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-800 dark:hover:bg-indigo-700 transition-colors shadow-md">
+          <button className="bg-slate-900 dark:bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-slate-800 dark:hover:bg-indigo-700 transition-colors shadow-md hidden sm:block">
             分享
           </button>
         </nav>
