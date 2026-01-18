@@ -6,11 +6,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Youyeye 图标设计师</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        warm: {
+                            bg: '#fdf6e3',
+                            card: '#f5efdc',
+                            text: '#5c4b37',
+                            border: '#e6dfcf'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+        
+        /* 暖色模式全局覆盖 */
+        .warm body {
+            background-color: #fdf6e3;
+            color: #5c4b37;
+        }
+        .warm .bg-white {
+            background-color: #f5efdc !important;
+        }
+        .warm .bg-slate-50 {
+            background-color: #fdf6e3 !important;
+        }
+        .warm .border-slate-200, .warm .border-slate-300, .warm .border-slate-100 {
+            border-color: #e6dfcf !important;
+        }
+        .warm .text-slate-900 {
+            color: #433422 !important;
+        }
+        .warm .text-slate-700, .warm .text-slate-600, .warm .text-slate-500 {
+            color: #6b5a46 !important;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .warm .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d6cfbf;
         }
     </style>
 <script type="importmap">
@@ -24,7 +79,7 @@
 }
 </script>
 </head>
-<body>
+<body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-500">
     <div id="root"></div>
 </body>
 </html>

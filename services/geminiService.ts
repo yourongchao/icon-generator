@@ -9,8 +9,14 @@ export const generateIcon = async (
 ): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   
+  // Map 'circle' to '1:1' for API config, and adjust the prompt
+  const apiRatio = aspectRatio === 'circle' ? '1:1' : aspectRatio;
+  const circularModifier = aspectRatio === 'circle' 
+    ? 'The overall design must be a perfect circular logo. Ensure the composition fits perfectly inside a circle, with centered elements and no content cut off by the circular boundary.' 
+    : '';
+
   // Construct the prompt for high-quality horizontal icons
-  const prompt = `A professional horizontal icon logo. The central element is the text "${text}". ${stylePrompt}. Ensure the text is perfectly spelled and legible. High resolution, crisp edges, cinematic lighting.`;
+  const prompt = `A professional ${aspectRatio} icon logo. The central element is the text "${text}". ${stylePrompt}. ${circularModifier} Ensure the text is perfectly spelled and legible. High resolution, crisp edges, cinematic lighting.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -22,7 +28,7 @@ export const generateIcon = async (
       },
       config: {
         imageConfig: {
-          aspectRatio: aspectRatio,
+          aspectRatio: apiRatio as any,
         }
       },
     });
