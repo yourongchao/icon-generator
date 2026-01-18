@@ -8,6 +8,8 @@ import { AspectRatio, StylePreset, GeneratedImage } from './types';
 
 type Theme = 'light' | 'warm' | 'dark';
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const App: React.FC = () => {
   const [inputText, setInputText] = useState('youyeye');
   const [selectedStyle, setSelectedStyle] = useState<StylePreset>(STYLE_PRESETS[0]);
@@ -20,7 +22,6 @@ const App: React.FC = () => {
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // 批量管理相关状态
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -61,6 +62,19 @@ const App: React.FC = () => {
     });
   };
 
+  // 统一错误处理函数
+  const handleApiError = (err: any) => {
+    console.error("API Error Object:", err);
+    const message = err.message || "";
+    if (message.includes("429") || message.includes("QUOTA_EXHAUSTED") || message.includes("RESOURCE_EXHAUSTED")) {
+      setError("请求太频繁啦！API 配额暂时用尽，请休息一分钟再试 ✨");
+    } else if (message.includes("API_KEY_INVALID")) {
+      setError("API Key 无效，请检查配置。");
+    } else {
+      setError(message || "生成图片失败，请重试。");
+    }
+  };
+
   const handleGenerate = useCallback(async () => {
     if (!inputText.trim()) return;
 
@@ -85,7 +99,7 @@ const App: React.FC = () => {
       setHistory(prev => [newRecord, ...prev]);
       
     } catch (err: any) {
-      setError(err.message || "生成图片失败，请重试。");
+      handleApiError(err);
     } finally {
       setIsLoading(false);
     }
@@ -96,10 +110,17 @@ const App: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-    const total = 5;
+    const total = 10;
     try {
       for (let i = 1; i <= total; i++) {
         setBatchProgress({ current: i, total });
+        
+        if (i > 1) {
+          // 增加一点随机延时，且稍微调大一点点范围到 0.5s-1.5s 以缓解 429
+          const randomDelay = Math.floor(Math.random() * (1500 - 500 + 1)) + 500;
+          await sleep(randomDelay);
+        }
+
         const url = await generateIcon(inputText, selectedStyle.promptSuffix, aspectRatio);
         
         const newRecord: GeneratedImage = {
@@ -117,7 +138,9 @@ const App: React.FC = () => {
         setGeneratedImageUrl(url);
       }
     } catch (err: any) {
-      setError(err.message || "批量生成过程中出现错误。");
+      handleApiError(err);
+      // 如果批量生成中报错，通常是配额问题，直接中断循环
+      setBatchProgress(null);
     } finally {
       setIsLoading(false);
       setBatchProgress(null);
@@ -228,11 +251,9 @@ const App: React.FC = () => {
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* 左侧配置栏 */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-300">
               <div className="space-y-6">
-                {/* 文字输入 */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
@@ -248,7 +269,6 @@ const App: React.FC = () => {
                   />
                 </div>
 
-                {/* 纵横比 */}
                 <div>
                   <label className="block text-sm font-black text-slate-900 dark:text-white mb-3 uppercase tracking-wider">
                     画面比例
@@ -270,7 +290,6 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 风格选择 - 仅文字展示 */}
                 <div>
                   <label className="block text-sm font-black text-slate-900 dark:text-white mb-3 uppercase tracking-wider">
                     设计风格
@@ -309,7 +328,7 @@ const App: React.FC = () => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      {batchProgress ? `批量生成 (${batchProgress.current}/${batchProgress.total})...` : '创作中...'}
+                      {batchProgress ? `灵感连发 (${batchProgress.current}/${batchProgress.total})...` : '创作中...'}
                     </>
                   ) : (
                     <>
@@ -330,7 +349,6 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* 右侧展示区 */}
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white dark:bg-slate-800 p-4 sm:p-10 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-700 min-h-[550px] flex flex-col items-center justify-center relative overflow-hidden transition-colors duration-300">
               {!generatedImageUrl && !isLoading ? (
@@ -376,6 +394,7 @@ const App: React.FC = () => {
                       <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white backdrop-blur-sm">
                         <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
                         <p className="text-xl font-black tracking-widest">灵感连发 ({batchProgress.current}/{batchProgress.total})</p>
+                        <p className="text-xs text-indigo-200 mt-2 opacity-80">正在优化下一组创作灵感...</p>
                       </div>
                     )}
                     <div className="absolute inset-0 bg-indigo-950/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -391,7 +410,6 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* 操作按钮区 */}
                   <div className="flex items-center justify-end gap-3 px-2">
                     <button 
                       onClick={handleBatchGenerate}
@@ -399,7 +417,7 @@ const App: React.FC = () => {
                       className="px-6 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 rounded-2xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
                     >
                       <span className="text-xl">🎆</span>
-                      灵感五连
+                      灵感十连
                     </button>
                     <button 
                       onClick={handleGenerate}
@@ -419,7 +437,6 @@ const App: React.FC = () => {
               )}
             </div>
             
-            {/* 管理面板 */}
             <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-300">
                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                  <div className="flex items-center gap-4">
@@ -468,28 +485,26 @@ const App: React.FC = () => {
                </div>
             </div>
             
-            {/* 历史记录网格 */}
             {history.length > 0 && (
               <div id="history-section" className="space-y-6 pt-4">
                 <div className="flex items-center justify-between px-2">
                   <h3 className="text-xl font-black text-slate-900 dark:text-white transition-colors tracking-tight">时光回廊</h3>
                   
-                  {/* 批量管理按钮逻辑 */}
                   <div className="flex items-center gap-2">
                     {isBatchMode ? (
                       <>
                         <button 
                           onClick={() => { setIsBatchMode(false); setSelectedIds(new Set()); }}
-                          className="px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                          className="px-6 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95"
                         >
                           取消
                         </button>
                         <button 
                           onClick={handleBatchDelete}
                           disabled={selectedIds.size === 0}
-                          className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                          className={`px-6 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 ${
                             selectedIds.size > 0 
-                            ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' 
+                            ? 'bg-red-500 text-white border-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20' 
                             : 'bg-slate-50 dark:bg-slate-900 text-slate-300 dark:text-slate-600 border-slate-100 dark:border-slate-800 cursor-not-allowed'
                           }`}
                         >
@@ -499,7 +514,7 @@ const App: React.FC = () => {
                     ) : (
                       <button 
                         onClick={() => setIsBatchMode(true)}
-                        className="px-6 py-1.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors uppercase tracking-wider"
+                        className="px-6 py-1.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all uppercase tracking-wider shadow-sm hover:shadow active:scale-95"
                       >
                         批量管理
                       </button>
@@ -518,19 +533,18 @@ const App: React.FC = () => {
                           isSelected 
                             ? 'border-indigo-500 ring-2 ring-indigo-500/20' 
                             : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500'
-                        } ${item.aspectRatio === 'circle' ? 'rounded-full aspect-square' : 'rounded-2xl aspect-video'}`}
+                        } ${isBatchMode && !isSelected ? 'opacity-80' : ''} ${item.aspectRatio === 'circle' ? 'rounded-full aspect-square' : 'rounded-2xl aspect-video'}`}
                       >
                         <img 
                           src={item.url} 
                           alt={item.text}
-                          className={`max-w-full max-h-full object-contain p-2 ${item.aspectRatio === 'circle' ? 'rounded-full' : ''} ${isSelected ? 'opacity-70 scale-95 transition-transform' : ''}`}
+                          className={`max-w-full max-h-full object-contain p-2 ${item.aspectRatio === 'circle' ? 'rounded-full' : ''} ${isSelected ? 'scale-95 transition-transform' : ''}`}
                         />
                         
-                        {/* 批量模式下的选中指示器 */}
                         {isBatchMode && (
-                          <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                          <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
                             isSelected 
-                              ? 'bg-indigo-500 border-indigo-500' 
+                              ? 'bg-indigo-500 border-indigo-500 scale-110' 
                               : 'bg-white/50 dark:bg-black/50 border-white/80 dark:border-slate-500/80'
                           }`}>
                             {isSelected && (
@@ -541,7 +555,6 @@ const App: React.FC = () => {
                           </div>
                         )}
 
-                        {/* 非批量模式下的悬浮操作 */}
                         {!isBatchMode && (
                           <div className={`absolute inset-0 bg-indigo-950/80 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center p-4 text-center backdrop-blur-[1px] ${item.aspectRatio === 'circle' ? 'rounded-full' : ''}`}>
                             <p className="text-white text-xs font-black truncate w-full mb-1">{item.text}</p>
@@ -576,7 +589,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* 教程弹窗 */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowHelpModal(false)}></div>

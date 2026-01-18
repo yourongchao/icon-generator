@@ -1,40 +1,56 @@
 
 # Youyeye 图标设计师 (Youyeye Icon Designer)
 
-🎨 **Youyeye 图标设计师** 是一款基于 Google Gemini 2.5 系列模型开发的高端、专业 AI 图标生成工具。它旨在为开发者、设计师及创意爱好者提供快速、多样化的品牌视觉解决方案。
+🎨 **Youyeye 图标设计师** 是一款基于 Google Gemini 2.5 系列模型开发的高端、专业 AI 图标生成工具。它旨在为开发者、设计师及创意爱好者提供快速、多样化的品牌视觉解决方案。通过深度集成的 AI 能力，将创意瞬间转化为高质量的视觉图标。
 
-[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/youyeye/youyeye-icon-designer)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/yourongchao/icon-generator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ 核心特性
 
-- **多样化风格预设**：内置 20+ 种专业设计风格，包括：
-  - **新！达芬奇草稿**：还原文艺复兴手稿质感。
-  - **动漫设计**：充满活力的二次元风格。
-  - **赛博霓虹**：未来主义光影艺术。
-  - **极简主义、3D 玻璃、黑金奢华**等更多选择。
-- **灵活的比例控制**：支持 1:1、4:3、16:9 以及特别优化的 **圆形** 比例，适应移动端、网页头图等多种场景。
-- **🎆 灵感五连批量生成**：一键连续生成 5 张不同风格或构图的图标，提高创作效率。
-- **本地历史存储**：使用浏览器 IndexedDB 技术，所有生成的图片及配置自动保存在用户本地，隐私安全且方便找回。
-- **多主题切换**：支持 浅色、深色 以及 暖色 模式，保护视力并提升使用体验。
+- **🚀 灵感十连 (Batch Generation)**：一键连续生成 10 张不同构图的图标，通过快速并行的灵感碰撞，大幅提升筛选效率。
+- **⏱️ 智能防刷延时**：内置 0.5s - 1.5s 的随机“呼吸”延时策略，模拟人类操作节奏，有效降低触发 API 429 频率限制（Rate Limit）的风险。
+- **🎨 20+ 深度风格预设**：从“极简主义”到“战锤世界”，从“赛博霓虹”到“达芬奇手稿”，预设经过精心调优，确保生成的图标具有极高的艺术审美。
+- **📐 灵活画面比例**：支持 1:1、4:3、16:9 比例，并特别针对 **圆形 (Circle)** 比例进行了构图优化，完美适配 Logo 场景。
+- **📦 增强型批量管理**：支持“批量选择”与“一键清除”，用户可以自由勾选多张生成的图片进行批量删除，管理更加随心所欲。
+- **💾 本地 IndexedDB 存储**：所有生成的图片数据均安全保存在您的浏览器本地数据库（IndexedDB）中，不经过任何云端服务器，隐私安全无忧。
+- **🌙 三大视觉主题**：提供 **浅色、深色、暖色 (护眼)** 三种主题模式，通过精细的 UI 适配，在任何环境下都能舒适创作。
 
 ## 🛠️ 技术栈
 
-- **Frontend**: React (ESM Direct Import), Tailwind CSS
-- **AI Engine**: Google Gemini API (gemini-2.5-flash-image)
-- **Data Persistence**: IndexedDB (Native Web API)
-- **Styling**: Tailwind UI with custom themes
+- **前端框架**: React 19 (基于 ESM 原生导入)
+- **样式引擎**: Tailwind CSS (支持高度自定义的主题配置)
+- **AI 引擎**: Google Gemini API (`gemini-2.5-flash-image`)
+- **数据持久化**: 浏览器原生 IndexedDB (使用事务处理确保数据完整性)
+- **交互设计**: 基于 CSS 动画与 Framer-like 逻辑的平滑转场
 
 ## 🚀 快速开始
 
-1. 确保在环境配置文件中设置了有效的 `API_KEY`（本应用自动读取注入的环境变量）。
-2. 输入您想要展示的 **图标内容**（如品牌名称或关键字）。
-3. 选择您心仪的 **设计风格** 和 **画面比例**。
-4. 点击 **立即生成** 开启创作之旅。
+### 1. 准备工作
+确保您已经配置了有效的 `API_KEY`（本应用会自动从执行环境中读取环境变量）。
 
-## 🔗 项目链接
+### 2. 创作流程
+1. **输入文字**: 在左侧面板输入您的品牌名或图标展示的文字（建议 1-8 个字）。
+2. **选择比例**: 根据应用场景（如头像选圆形，头图选 16:9）选择比例。
+3. **挑选风格**: 点击风格卡片预览设计流派。
+4. **立即生成**: 
+   - 点击 **“立即生成”**：专注创作一张精品。
+   - 点击 **“灵感十连”**：快速铺开思路，获取多样化选择。
 
-- **GitHub 地址**: [https://github.com/youyeye/youyeye-icon-designer](https://github.com/youyeye/youyeye-icon-designer)
+### 3. 下载与保存
+生成的图片支持即时预览，鼠标悬浮在预览图上可点击“下载”或在操作栏点击“保存到本地”。
+
+## ⚠️ 常见问题排查 (FAQ)
+
+### 报错：429 RESOURCE_EXHAUSTED
+**原因**：这是由于 Google Gemini API 的频率限制导致的。免费层级的 API 通常对每分钟的请求数（RPM）有严格限制。
+**解决**：
+- 应用已内置自动重试引导，请等待约 60 秒后再尝试。
+- 避免在短时间内连续多次触发“灵感十连”。
+- 如果频繁遇到，建议在 [Google AI Studio](https://aistudio.google.com/) 检查配额或更换 API Key。
+
+### 历史记录消失了？
+**说明**：图片存储在浏览器的 **IndexedDB** 中。如果您清理了浏览器缓存、使用了无痕模式，或者手动点击了“清空本地历史记录”，数据将会被永久移除。建议对重要的设计及时点击“下载”。
 
 ## 📄 开源协议
 
@@ -44,9 +60,8 @@
 
 - **作者**: youyeye
 - **联系邮箱**: [2468068569@qq.com](mailto:2468068569@qq.com)
-- **GitHub 主页**: [https://github.com/youyeye](https://github.com/youyeye)
-- **GitHub 项目地址**: [https://github.com/yourongchao/icon-generator](https://github.com/yourongchao/icon-generator)
+- **GitHub**: [https://github.com/yourongchao](https://github.com/yourongchao)
 
 ---
 
-*如果您喜欢这个项目，欢迎反馈改进建议！*
+*如果您喜欢这个工具，欢迎在 GitHub 上点个 Star ⭐，您的支持是我持续更新的动力！*
