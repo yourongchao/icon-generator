@@ -45,6 +45,7 @@
 - **作者**: youyeye
 - **联系邮箱**: [2468068569@qq.com](mailto:2468068569@qq.com)
 - **GitHub 主页**: [https://github.com/youyeye](https://github.com/youyeye)
+- **GitHub 项目地址**: [https://github.com/yourongchao/icon-generator](https://github.com/yourongchao/icon-generator)
 
 ---
 

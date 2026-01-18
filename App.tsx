@@ -20,6 +20,10 @@ const App: React.FC = () => {
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
+  // 批量管理相关状态
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('theme') as Theme;
@@ -110,8 +114,6 @@ const App: React.FC = () => {
         
         await saveHistory(newRecord);
         setHistory(prev => [newRecord, ...prev]);
-        
-        // 自动更新预览为当前生成的图片（最后生成的会留在屏幕上）
         setGeneratedImageUrl(url);
       }
     } catch (err: any) {
@@ -127,6 +129,11 @@ const App: React.FC = () => {
     try {
       await deleteHistoryItem(id);
       setHistory(prev => prev.filter(item => item.id !== id));
+      if (selectedIds.has(id)) {
+        const next = new Set(selectedIds);
+        next.delete(id);
+        setSelectedIds(next);
+      }
     } catch (err) {
       console.error("删除失败", err);
     }
@@ -147,6 +154,8 @@ const App: React.FC = () => {
       setHistory([]);
       setGeneratedImageUrl(null);
       setShowClearConfirm(false);
+      setIsBatchMode(false);
+      setSelectedIds(new Set());
     } catch (err) {
       console.error("清空失败", err);
       setError("清空数据失败，请重试。");
@@ -155,7 +164,37 @@ const App: React.FC = () => {
     }
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setIsLoading(true);
+    try {
+      const idsToDelete = Array.from(selectedIds);
+      await Promise.all(idsToDelete.map(id => deleteHistoryItem(id)));
+      setHistory(prev => prev.filter(item => !selectedIds.has(item.id)));
+      setSelectedIds(new Set());
+      setIsBatchMode(false);
+    } catch (err) {
+      console.error("批量删除失败", err);
+      setError("部分图片删除失败，请重试。");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleSelectItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+  };
+
   const selectFromHistory = (item: GeneratedImage) => {
+    if (isBatchMode) return;
     setGeneratedImageUrl(item.url);
     setInputText(item.text);
     setAspectRatio(item.aspectRatio);
@@ -352,7 +391,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* 操作按钮区，已根据要求移除文本，添加灵感五连按钮 */}
+                  {/* 操作按钮区 */}
                   <div className="flex items-center justify-end gap-3 px-2">
                     <button 
                       onClick={handleBatchGenerate}
@@ -434,44 +473,102 @@ const App: React.FC = () => {
               <div id="history-section" className="space-y-6 pt-4">
                 <div className="flex items-center justify-between px-2">
                   <h3 className="text-xl font-black text-slate-900 dark:text-white transition-colors tracking-tight">时光回廊</h3>
-                  <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-full uppercase">Recent Creations</span>
+                  
+                  {/* 批量管理按钮逻辑 */}
+                  <div className="flex items-center gap-2">
+                    {isBatchMode ? (
+                      <>
+                        <button 
+                          onClick={() => { setIsBatchMode(false); setSelectedIds(new Set()); }}
+                          className="px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          取消
+                        </button>
+                        <button 
+                          onClick={handleBatchDelete}
+                          disabled={selectedIds.size === 0}
+                          className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                            selectedIds.size > 0 
+                            ? 'bg-red-500 text-white border-red-500 hover:bg-red-600' 
+                            : 'bg-slate-50 dark:bg-slate-900 text-slate-300 dark:text-slate-600 border-slate-100 dark:border-slate-800 cursor-not-allowed'
+                          }`}
+                        >
+                          删除 {selectedIds.size > 0 ? `(${selectedIds.size})` : ''}
+                        </button>
+                      </>
+                    ) : (
+                      <button 
+                        onClick={() => setIsBatchMode(true)}
+                        className="px-6 py-1.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors uppercase tracking-wider"
+                      >
+                        批量管理
+                      </button>
+                    )}
+                  </div>
                 </div>
+                
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {history.map((item) => (
-                    <div 
-                      key={item.id}
-                      onClick={() => selectFromHistory(item)}
-                      className={`group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden cursor-pointer hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-xl transition-all flex items-center justify-center bg-slate-50 dark:bg-slate-900 ${item.aspectRatio === 'circle' ? 'rounded-full aspect-square' : 'rounded-2xl aspect-video'}`}
-                    >
-                      <img 
-                        src={item.url} 
-                        alt={item.text}
-                        className={`max-w-full max-h-full object-contain p-2 ${item.aspectRatio === 'circle' ? 'rounded-full' : ''}`}
-                      />
-                      <div className={`absolute inset-0 bg-indigo-950/80 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center p-4 text-center backdrop-blur-[1px] ${item.aspectRatio === 'circle' ? 'rounded-full' : ''}`}>
-                        <p className="text-white text-xs font-black truncate w-full mb-1">{item.text}</p>
-                        <p className="text-indigo-300 text-[10px] mb-3">{item.styleName}</p>
-                        <div className="flex gap-2">
-                           <button 
-                            onClick={(e) => { e.stopPropagation(); downloadImage(item.url); }}
-                            className="p-2 bg-white/10 hover:bg-white/30 rounded-full text-white transition-colors"
-                           >
-                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                             </svg>
-                           </button>
-                           <button 
-                            onClick={(e) => handleDeleteHistory(item.id, e)}
-                            className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-full text-red-200 transition-colors"
-                           >
-                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                             </svg>
-                           </button>
-                        </div>
+                  {history.map((item) => {
+                    const isSelected = selectedIds.has(item.id);
+                    return (
+                      <div 
+                        key={item.id}
+                        onClick={(e) => isBatchMode ? toggleSelectItem(item.id, e) : selectFromHistory(item)}
+                        className={`group relative bg-white dark:bg-slate-800 border-2 overflow-hidden cursor-pointer hover:shadow-xl transition-all flex items-center justify-center bg-slate-50 dark:bg-slate-900 ${
+                          isSelected 
+                            ? 'border-indigo-500 ring-2 ring-indigo-500/20' 
+                            : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500'
+                        } ${item.aspectRatio === 'circle' ? 'rounded-full aspect-square' : 'rounded-2xl aspect-video'}`}
+                      >
+                        <img 
+                          src={item.url} 
+                          alt={item.text}
+                          className={`max-w-full max-h-full object-contain p-2 ${item.aspectRatio === 'circle' ? 'rounded-full' : ''} ${isSelected ? 'opacity-70 scale-95 transition-transform' : ''}`}
+                        />
+                        
+                        {/* 批量模式下的选中指示器 */}
+                        {isBatchMode && (
+                          <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            isSelected 
+                              ? 'bg-indigo-500 border-indigo-500' 
+                              : 'bg-white/50 dark:bg-black/50 border-white/80 dark:border-slate-500/80'
+                          }`}>
+                            {isSelected && (
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 非批量模式下的悬浮操作 */}
+                        {!isBatchMode && (
+                          <div className={`absolute inset-0 bg-indigo-950/80 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center p-4 text-center backdrop-blur-[1px] ${item.aspectRatio === 'circle' ? 'rounded-full' : ''}`}>
+                            <p className="text-white text-xs font-black truncate w-full mb-1">{item.text}</p>
+                            <p className="text-indigo-300 text-[10px] mb-3">{item.styleName}</p>
+                            <div className="flex gap-2">
+                               <button 
+                                onClick={(e) => { e.stopPropagation(); downloadImage(item.url); }}
+                                className="p-2 bg-white/10 hover:bg-white/30 rounded-full text-white transition-colors"
+                               >
+                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                 </svg>
+                               </button>
+                               <button 
+                                onClick={(e) => handleDeleteHistory(item.id, e)}
+                                className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-full text-red-200 transition-colors"
+                               >
+                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                 </svg>
+                               </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -479,7 +576,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* 教程弹窗 - 省略具体内容以保持精简，但逻辑保留 */}
+      {/* 教程弹窗 */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowHelpModal(false)}></div>
